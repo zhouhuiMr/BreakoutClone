@@ -13,7 +13,6 @@ window.onload = function(){
             debugShowVelocity : true,
             fps : 120,
             gravity: { y: 200 },
-
         }
     };
 
@@ -34,6 +33,18 @@ window.onload = function(){
 
     let game = new Phaser.Game(config);
 
+    let gameObject = {
+        ground : null,
+        plankContainer: null,
+        plankLeft : null,
+        plankRight : null,
+        plank : null
+    };
+
+    let cursorsObject = {
+        cursors : null
+    };
+
     function preload ()
     {
         this.load.setBaseURL('http://labs.phaser.io');
@@ -53,30 +64,71 @@ window.onload = function(){
 
     function create ()
     {
+        this.physics.world.setBoundsCollision(true, true, true, true);
 
-        this.add.image(10, 300, 'sky');
+        //初始化木板
+        initPlank(this);
 
-        var particles = this.add.particles('red');
-
-        var emitter = particles.createEmitter({
-            speed: 200,
-            scale: { start: 1, end: 0 },
-            blendMode: 'ADD'
-        });
-
-        var logo = this.physics.add.image(20, 20, 'logo');
-
-        logo.scaleX = 0.2;
-        logo.scaleY = 0.2;
-
-        logo.setVelocity(100, 200);
-        logo.setBounce(1, 1);
-        logo.setCollideWorldBounds(true);
-
-        emitter.startFollow(logo);
+        //初始化按键操作
+        initCursors(this);
     }
 
     function update(){
-        console.info(1111)
+
+    }
+
+    /**
+     *  初始化承接小球的木板
+     *  @param scene
+     *
+     *  @since 2020.07.15
+     *  @author zhouhui
+     */
+    function initPlank (scene){
+        const plankSideWidth = 20;
+        const plankSideHeight = 30;
+        const plankWidth = 80;
+        const plankHeight = 5;
+        const x = plankSideWidth + plankWidth / 2;
+        const y =590;
+
+        gameObject.plankLeft = scene.add.sprite(-1 * ( plankSideWidth + plankWidth ) / 2, 0, "");
+        gameObject.plankLeft.setDisplaySize(plankSideWidth, plankSideHeight);
+
+        gameObject.plankRight = scene.add.sprite(( plankSideWidth + plankWidth ) / 2, 0, "");
+        gameObject.plankRight.setDisplaySize(plankSideWidth, plankSideHeight);
+
+        gameObject.plank = scene.add.sprite(0, 0, "");
+        gameObject.plank.setDisplaySize(plankWidth,plankHeight);
+
+        let container = [gameObject.plankLeft,gameObject.plankRight,gameObject.plank];
+        gameObject.plankContainer = scene.add.container(x, y, container);
+        gameObject.plankContainer.setSize(80, 20);
+        scene.physics.world.enable(gameObject.plankContainer);
+
+        //地面
+        const groundHeight = 20;
+        gameObject.ground = scene.physics.add.sprite(config.width / 2, config.height - groundHeight / 2, "");
+        gameObject.ground.setDisplaySize(config.width,groundHeight);
+        gameObject.ground.body.setAllowGravity(false);
+        gameObject.ground.body.setImmovable(true);
+
+        scene.physics.add.collider(gameObject.ground,gameObject.plankContainer);
+        scene.physics.add.collider(gameObject.plank,[gameObject.plankLeft,gameObject.plankRight]);
+    }
+
+    /**
+     * 初始化按键操作
+     * @param scene
+     *
+     * @since 2020.07.17
+     * @author zhouhui
+     */
+    function initCursors(scene){
+        cursorsObject.cursors = scene.input.keyboard.createCursorKeys();
+        if (cursorsObject.cursors.right.isDown) {
+            console.info(1111)
+            gameObject.plankLeft.setVelocityX(300);
+        }
     }
 };
