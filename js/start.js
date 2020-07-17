@@ -42,7 +42,8 @@ window.onload = function(){
     };
 
     let cursorsObject = {
-        cursors : null
+        cursors : null,
+        dragDistanceThreshold : 16,
     };
 
     function preload ()
@@ -74,7 +75,13 @@ window.onload = function(){
     }
 
     function update(){
-
+        //按键控制
+        gameObject.plankContainer.body.setVelocityX(0);
+        if (cursorsObject.cursors.right.isDown) {
+            gameObject.plankContainer.body.setVelocityX(300);
+        }else if(cursorsObject.cursors.left.isDown){
+            gameObject.plankContainer.body.setVelocityX(-300);
+        }
     }
 
     /**
@@ -90,7 +97,7 @@ window.onload = function(){
         const plankWidth = 80;
         const plankHeight = 5;
         const x = plankSideWidth + plankWidth / 2;
-        const y =590;
+        const y =600;
 
         gameObject.plankLeft = scene.add.sprite(-1 * ( plankSideWidth + plankWidth ) / 2, 0, "");
         gameObject.plankLeft.setDisplaySize(plankSideWidth, plankSideHeight);
@@ -102,9 +109,15 @@ window.onload = function(){
         gameObject.plank.setDisplaySize(plankWidth,plankHeight);
 
         let container = [gameObject.plankLeft,gameObject.plankRight,gameObject.plank];
-        gameObject.plankContainer = scene.add.container(x, y, container);
-        gameObject.plankContainer.setSize(80, 20);
+        gameObject.plankContainer = scene.add.container(config.width / 2, y, container);
+        gameObject.plankContainer.setSize(plankWidth + plankSideWidth * 2 , 17);
         scene.physics.world.enable(gameObject.plankContainer);
+        gameObject.plankContainer.body.setCollideWorldBounds(true);
+        gameObject.plankContainer.body.setOffset(0,7);
+        //设置事件范围
+        gameObject.plankContainer.setInteractive({draggable: true});
+        gameObject.plankContainer.input.hitArea.setTo(0, -10, plankWidth + plankSideWidth * 2 , plankSideHeight);
+
 
         //地面
         const groundHeight = 20;
@@ -125,10 +138,13 @@ window.onload = function(){
      * @author zhouhui
      */
     function initCursors(scene){
+        //按键
         cursorsObject.cursors = scene.input.keyboard.createCursorKeys();
-        if (cursorsObject.cursors.right.isDown) {
-            console.info(1111)
-            gameObject.plankLeft.setVelocityX(300);
-        }
+        //拖动
+        scene.input.dragDistanceThreshold = cursorsObject.dragDistanceThreshold;
+        scene.input.setDraggable(gameObject.plankContainer);
+        gameObject.plankContainer.on('drag', function (pointer, dragX, dragY) {
+            this.x = dragX;
+        });
     }
 };
