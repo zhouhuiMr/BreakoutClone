@@ -38,7 +38,8 @@ window.onload = function(){
         plankContainer: null,
         plankLeft : null,
         plankRight : null,
-        plank : null
+        plank : null,
+        ball : null
     };
 
     let cursorsObject = {
@@ -67,11 +68,19 @@ window.onload = function(){
     {
         this.physics.world.setBoundsCollision(true, true, true, true);
 
+        //创建小球
+        initBall(this);
+
         //初始化木板
         initPlank(this);
 
         //初始化按键操作
         initCursors(this);
+
+        //进行碰撞检测对象
+        this.physics.add.collider(gameObject.ground, gameObject.plankContainer);
+        this.physics.add.collider(gameObject.ball, gameObject.plankContainer, ballHitPlank, null, this);
+        this.physics.add.collider(gameObject.ball, gameObject.ground, ballHitGround, null, this);
     }
 
     function update(){
@@ -85,8 +94,21 @@ window.onload = function(){
     }
 
     /**
+     * 创建小球对象
+     * @param scene 场景对象
+     */
+    function initBall(scene){
+        gameObject.ball = scene.physics.add.sprite(config.width / 2, config.height / 2, "");
+        gameObject.ball.setDisplaySize(30, 30);
+        gameObject.ball.body.setCollideWorldBounds(true);
+        gameObject.ball.body.setAllowGravity(false);
+        gameObject.ball.body.setBounce(1, 1);
+        gameObject.ball.body.setVelocity(0, 300);
+    }
+
+    /**
      *  初始化承接小球的木板
-     *  @param scene
+     *  @param scene 场景对象
      *
      *  @since 2020.07.15
      *  @author zhouhui
@@ -110,14 +132,13 @@ window.onload = function(){
 
         let container = [gameObject.plankLeft,gameObject.plankRight,gameObject.plank];
         gameObject.plankContainer = scene.add.container(config.width / 2, y, container);
-        gameObject.plankContainer.setSize(plankWidth + plankSideWidth * 2 , 17);
+        gameObject.plankContainer.setSize(plankWidth + plankSideWidth * 2, 17);
         scene.physics.world.enable(gameObject.plankContainer);
         gameObject.plankContainer.body.setCollideWorldBounds(true);
         gameObject.plankContainer.body.setOffset(0,7);
         //设置事件范围
         gameObject.plankContainer.setInteractive({draggable: true});
         gameObject.plankContainer.input.hitArea.setTo(0, -10, plankWidth + plankSideWidth * 2 , plankSideHeight);
-
 
         //地面
         const groundHeight = 20;
@@ -126,13 +147,11 @@ window.onload = function(){
         gameObject.ground.body.setAllowGravity(false);
         gameObject.ground.body.setImmovable(true);
 
-        scene.physics.add.collider(gameObject.ground,gameObject.plankContainer);
-        scene.physics.add.collider(gameObject.plank,[gameObject.plankLeft,gameObject.plankRight]);
     }
 
     /**
      * 初始化按键操作
-     * @param scene
+     * @param scene 场景对象
      *
      * @since 2020.07.17
      * @author zhouhui
@@ -146,5 +165,30 @@ window.onload = function(){
         gameObject.plankContainer.on('drag', function (pointer, dragX, dragY) {
             this.x = dragX;
         });
+    }
+
+    /**
+     * 小球与木板进行碰撞事件
+     * @param ball 小球
+     * @param plank 平板
+     *
+     * @since 2020.07.18
+     * @author zhouhui
+     */
+    function ballHitPlank(ball, plank){
+        let diff = ball.x - plank.x;
+        ball.setVelocity(diff * 5, -300);
+    }
+
+    /**
+     * 小球与地面的碰撞
+     * @param ball 小球
+     * @param ground 地面
+     *
+     * @since 2020.07.18
+     * @author zhouhui
+     */
+    function ballHitGround(ball,ground){
+        ball.setVelocity(0, 0);
     }
 };
