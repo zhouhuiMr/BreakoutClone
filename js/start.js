@@ -81,6 +81,7 @@ window.onload = function(){
         this.physics.add.collider(gameObject.ground, gameObject.plankContainer);
         this.physics.add.collider(gameObject.ball, gameObject.plankContainer, ballHitPlank, null, this);
         this.physics.add.collider(gameObject.ball, gameObject.ground, ballHitGround, null, this);
+
     }
 
     function update(){
@@ -176,8 +177,10 @@ window.onload = function(){
      * @author zhouhui
      */
     function ballHitPlank(ball, plank){
-        let diff = ball.x - plank.x;
-        ball.setVelocity(diff * 5, -300);
+        if(plank.body.touching.up){
+            let diff = ball.x - plank.x;
+            ball.body.setVelocity(diff * 5, -300);
+        }
     }
 
     /**
