@@ -1,9 +1,32 @@
 window.onload = function(){
 
+    /**
+     *  游戏中的状态的控制
+     */
+    let gameStatus = {
+        processStatus : -1,//游戏过程中的状态，-1、初始化；0、初始化完成可以开始；1、进行中；2、暂停；3、结束
+    };
+
+    /**
+     * 游戏中的数据参数
+     */
+    let gameProperties = {
+        Ball_VelocityX : 300,
+        Ball_VelocityY : 300,
+        Plank_Move_VelocityX : 300,
+        Plank_Move_VelocityY : 0
+    };
+
+    /**
+     *  游戏缩放模式的控制
+     */
     let scaleConfig = {
         mode : Phaser.Scale.ScaleModes.HEIGHT_CONTROLS_WIDTH
     };
 
+    /**
+     * 物理属性的配置
+     */
     let physicsConfig = {
         default: 'arcade',
         arcade: {
@@ -16,6 +39,9 @@ window.onload = function(){
         }
     };
 
+    /**
+     *  游戏的全局配置
+     */
     let config = {
         type: Phaser.AUTO,
         width: 360,
@@ -85,12 +111,16 @@ window.onload = function(){
     }
 
     function update(){
-        //按键控制
-        gameObject.plankContainer.body.setVelocityX(0);
-        if (cursorsObject.cursors.right.isDown) {
-            gameObject.plankContainer.body.setVelocityX(300);
-        }else if(cursorsObject.cursors.left.isDown){
-            gameObject.plankContainer.body.setVelocityX(-300);
+        if(gameStatus.processStatus == 0){
+            gameObject.ball.body.position.x = gameObject.plankContainer.body.position.x
+        }
+        if(gameStatus.processStatus >= 0){
+            gameObject.plankContainer.body.setVelocityX(0);
+            if (cursorsObject.cursors.right.isDown) {
+                gameObject.plankContainer.body.setVelocityX(gameProperties.Plank_Move_VelocityX);
+            }else if(cursorsObject.cursors.left.isDown){
+                gameObject.plankContainer.body.setVelocityX(-1 * gameProperties.Plank_Move_VelocityX);
+            }
         }
     }
 
@@ -101,6 +131,7 @@ window.onload = function(){
     function initBall(scene){
         gameObject.ball = scene.physics.add.sprite(config.width / 2, config.height / 2, "");
         gameObject.ball.setDisplaySize(30, 30);
+        gameObject.ball.setCircle(15);
         gameObject.ball.body.setCollideWorldBounds(true);
         gameObject.ball.body.setAllowGravity(false);
         gameObject.ball.body.setBounce(1, 1);
@@ -177,6 +208,12 @@ window.onload = function(){
      * @author zhouhui
      */
     function ballHitPlank(ball, plank){
+        if(gameStatus.processStatus == -1){
+            ball.body.setVelocity(0, 0);
+            ball.body.setFrictionX(1);
+            gameStatus.processStatus = 0;
+            return;
+        }
         if(plank.body.touching.up){
             let diff = ball.x - plank.x;
             ball.body.setVelocity(diff * 5, -300);
@@ -192,6 +229,7 @@ window.onload = function(){
      * @author zhouhui
      */
     function ballHitGround(ball,ground){
-        ball.setVelocity(0, 0);
+        ball.body.setVelocity(0, 0);
+        ball.body.setImmovable(true);
     }
 };
