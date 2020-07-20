@@ -147,7 +147,7 @@ window.onload = function(){
      */
     function initPlank (scene){
         const plankSideWidth = 20;
-        const plankSideHeight = 30;
+        const plankSideHeight = 40;
         const plankWidth = 80;
         const plankHeight = 5;
         const x = plankSideWidth + plankWidth / 2;
