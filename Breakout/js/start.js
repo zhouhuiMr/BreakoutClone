@@ -13,8 +13,16 @@ window.onload = function(){
     let gameProperties = {
         Ball_VelocityX : 300,
         Ball_VelocityY : 300,
-        Plank_Move_VelocityX : 300,
-        Plank_Move_VelocityY : 0
+        Plank_Move_VelocityX : 240,
+        Plank_Move_VelocityY : 0,
+
+        plankSideWidth : 20,
+        plankSideHeight : 40,
+        plankWidth : 80,
+        plankHeight : 5,
+
+        groundHeight : 20,
+        plankContainer_body_height : 22,
     };
 
     /**
@@ -59,6 +67,9 @@ window.onload = function(){
 
     let game = new Phaser.Game(config);
 
+    /**
+     * 游戏中的对象
+     */
     let gameObject = {
         ground : null,
         plankContainer: null,
@@ -75,11 +86,8 @@ window.onload = function(){
 
     function preload ()
     {
-        this.load.setBaseURL('http://labs.phaser.io');
 
-        this.load.image('sky', 'assets/skies/space3.png');
-        this.load.image('logo', 'assets/sprites/phaser3-logo.png');
-        this.load.image('red', 'assets/particles/red.png');
+        this.load.atlas('bear', 'resources/bear.png', 'resources/bear.json');
 
         this.load.on("progress",function(progress){
             //正在加载
@@ -93,6 +101,9 @@ window.onload = function(){
     function create ()
     {
         this.physics.world.setBoundsCollision(true, true, true, true);
+
+        //初始化动画
+        initAnimation(this);
 
         //创建小球
         initBall(this);
@@ -111,8 +122,9 @@ window.onload = function(){
     }
 
     function update(){
+
         if(gameStatus.processStatus == 0){
-            gameObject.ball.body.position.x = gameObject.plankContainer.body.position.x
+            gameObject.ball.body.x = gameObject.plankContainer.body.center.x - gameObject.ball.body.width / 2;
         }
         if(gameStatus.processStatus >= 0){
             gameObject.plankContainer.body.setVelocityX(0);
@@ -129,7 +141,8 @@ window.onload = function(){
      * @param scene 场景对象
      */
     function initBall(scene){
-        gameObject.ball = scene.physics.add.sprite(config.width / 2, config.height / 2, "");
+        let y = config.height - gameProperties.groundHeight - gameProperties.plankSideHeight;
+        gameObject.ball = scene.physics.add.sprite(config.width / 2, y, "");
         gameObject.ball.setDisplaySize(30, 30);
         gameObject.ball.setCircle(15);
         gameObject.ball.body.setCollideWorldBounds(true);
@@ -146,17 +159,19 @@ window.onload = function(){
      *  @author zhouhui
      */
     function initPlank (scene){
-        const plankSideWidth = 20;
-        const plankSideHeight = 40;
-        const plankWidth = 80;
-        const plankHeight = 5;
+        const plankSideWidth = gameProperties.plankSideWidth;
+        const plankSideHeight = gameProperties.plankSideHeight;
+        const plankWidth = gameProperties.plankWidth;
+        const plankHeight = gameProperties.plankHeight;
         const x = plankSideWidth + plankWidth / 2;
-        const y =600;
+        const y = 600;
 
-        gameObject.plankLeft = scene.add.sprite(-1 * ( plankSideWidth + plankWidth ) / 2, 0, "");
+        const plankContainer_body_height = gameProperties.plankContainer_body_height;
+
+        gameObject.plankLeft = scene.add.sprite(-1 * ( plankSideWidth + plankWidth ) / 2, 0, "bear", "bear1_002.png");
         gameObject.plankLeft.setDisplaySize(plankSideWidth, plankSideHeight);
 
-        gameObject.plankRight = scene.add.sprite(( plankSideWidth + plankWidth ) / 2, 0, "");
+        gameObject.plankRight = scene.add.sprite(( plankSideWidth + plankWidth ) / 2, 0, "bear", 'bear2_002.png');
         gameObject.plankRight.setDisplaySize(plankSideWidth, plankSideHeight);
 
         gameObject.plank = scene.add.sprite(0, 0, "");
@@ -164,21 +179,45 @@ window.onload = function(){
 
         let container = [gameObject.plankLeft,gameObject.plankRight,gameObject.plank];
         gameObject.plankContainer = scene.add.container(config.width / 2, y, container);
-        gameObject.plankContainer.setSize(plankWidth + plankSideWidth * 2, 17);
+        gameObject.plankContainer.setSize(plankWidth + plankSideWidth * 2, plankContainer_body_height);
         scene.physics.world.enable(gameObject.plankContainer);
         gameObject.plankContainer.body.setCollideWorldBounds(true);
-        gameObject.plankContainer.body.setOffset(0,7);
+        gameObject.plankContainer.body.setOffset(0,10);
         //设置事件范围
         gameObject.plankContainer.setInteractive({draggable: true});
         gameObject.plankContainer.input.hitArea.setTo(0, -10, plankWidth + plankSideWidth * 2 , plankSideHeight);
 
         //地面
-        const groundHeight = 20;
+        const groundHeight = gameProperties.groundHeight;
         gameObject.ground = scene.physics.add.sprite(config.width / 2, config.height - groundHeight / 2, "");
         gameObject.ground.setDisplaySize(config.width,groundHeight);
         gameObject.ground.body.setAllowGravity(false);
         gameObject.ground.body.setImmovable(true);
 
+
+    }
+
+    /**
+     *  初始化动画
+     *  @param scene 场景对象
+     *
+     *  @since 2020.07.21
+     *  @author zhouhui
+     */
+    function initAnimation(scene){
+        scene.anims.create({
+            key : "bearLeft",
+            frames : scene.anims.generateFrameNames('bear', { prefix: 'bear1_',suffix:'.png',start:0, end: 4, zeroPad: 3 }),
+            repeat: -1,
+            frameRate : 16
+        });
+
+        scene.anims.create({
+            key : "bearRight",
+            frames : scene.anims.generateFrameNames('bear', { prefix: 'bear2_',suffix:'.png',start:0, end: 4, zeroPad: 3 }),
+            repeat: -1,
+            frameRate : 16
+        });
     }
 
     /**
@@ -191,13 +230,68 @@ window.onload = function(){
     function initCursors(scene){
         //按键
         cursorsObject.cursors = scene.input.keyboard.createCursorKeys();
+        scene.input.keyboard.on('keydown-RIGHT', function (event) {
+            keyDown_playAnimation();
+        });
+        scene.input.keyboard.on('keydown-LEFT', function (event) {
+            keyDown_playAnimation();
+        });
+
+        scene.input.keyboard.on('keyup-RIGHT', function (event) {
+            keyUp_pauseAnimation();
+        });
+
+        scene.input.keyboard.on('keyup-LEFT', function (event) {
+            keyUp_pauseAnimation();
+        });
+
         //拖动
         scene.input.dragDistanceThreshold = cursorsObject.dragDistanceThreshold;
         scene.input.setDraggable(gameObject.plankContainer);
+
+        gameObject.plankContainer.on('dragstart', function (pointer, dragX, dragY) {
+            keyDown_playAnimation();
+        });
+
         gameObject.plankContainer.on('drag', function (pointer, dragX, dragY) {
             this.x = dragX;
         });
+
+        gameObject.plankContainer.on('dragend', function (pointer, dragX, dragY) {
+            keyUp_pauseAnimation();
+        });
     }
+
+    /**
+     *  播放动画
+     *
+     *  @since 2020.07.22
+     *  @author zhouhui
+     */
+    function keyDown_playAnimation(){
+        if(!gameObject.plankLeft.anims.isPlaying){
+            gameObject.plankLeft.anims.play('bearLeft',false);
+        }
+        if(!gameObject.plankRight.anims.isPlaying){
+            gameObject.plankRight.anims.play('bearRight',false);
+        }
+    }
+
+    /**
+     *  暂停动画播放
+     *
+     *  @since 2020.07.22
+     *  @author zhouhui
+     */
+    function keyUp_pauseAnimation(){
+        if(gameObject.plankLeft.anims.isPlaying){
+            gameObject.plankLeft.anims.pause()
+        }
+        if(gameObject.plankRight.anims.isPlaying){
+            gameObject.plankRight.anims.pause();
+        }
+    }
+
 
     /**
      * 小球与木板进行碰撞事件
