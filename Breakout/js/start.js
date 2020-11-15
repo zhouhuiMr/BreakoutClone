@@ -26,7 +26,7 @@ window.onload = function(){
         plankSideWidth : 20,
         plankSideHeight : 40,
         plankWidth : 60,
-        plankHeight : 5,
+        plankHeight : 20,
         plankLife : 2,
 
         groundHeight : 100,
@@ -127,13 +127,18 @@ window.onload = function(){
         this.load.audio('ballHitPlank', ['resources/sound/ballHitPlank.mp3']);
         this.load.audio('shoot', ['resources/sound/shoot.mp3']);
 
-        this.load.on("progress",function(progress){
+        var progress = this.add.graphics();
+
+        this.load.on("progress",function(value){
             //正在加载
-            console.info(progress);
+            progress.clear();
+            progress.fillStyle(0xffffff, 1);
+            progress.fillRect(0, config.height / 2, config.width * value, 60);
         });
 
         this.load.on('complete', function(loader,totalComplete,totalFailed){
             //加载完成
+            progress.destroy();
         });
     };
 
@@ -185,6 +190,13 @@ window.onload = function(){
             frames : scene.anims.generateFrameNames('resources', { prefix: 'life1_',suffix:'.png',start:0, end: 5, zeroPad: 3 }),
             repeat: 0,
             frameRate : 18
+        });
+
+        scene.anims.create({
+            key : "plankUp",
+            frames : scene.anims.generateFrameNames('resources', { prefix: 'plank1_',suffix:'.png',start:1, end: 3, zeroPad: 3 }),
+            repeat: 0,
+            frameRate : 20
         });
 
         scene.anims.create({
@@ -567,13 +579,13 @@ window.onload = function(){
                 gameProperties.isUseSound = false;
                 gameObject.soundButton.setTexture("resources", "sound2.png");
                 if(gameObject.backSound != null){
-                    gameObject.backSound.pause();
+                    // gameObject.backSound.pause();
                 }
             }else{
                 gameProperties.isUseSound = true;
                 gameObject.soundButton.setTexture("resources", "sound1.png");
                 if(gameObject.backSound != null){
-                    gameObject.backSound.play();
+                    // gameObject.backSound.play();
                 }
             }
         });
@@ -672,7 +684,7 @@ window.onload = function(){
         gameObject.plankRight = scene.add.sprite(( plankSideWidth + plankWidth ) / 2 - 2, 0, "resources", 'bear2_002.png');
         gameObject.plankRight.setDisplaySize(plankSideWidth, plankSideHeight);
 
-        gameObject.plank = scene.add.sprite(0, 0, "resources", "plank.png");
+        gameObject.plank = scene.add.sprite(0, -5, "resources", "plank1_001.png");
         gameObject.plank.setDisplaySize(plankWidth,plankHeight);
 
         let container = [gameObject.plankLeft,gameObject.plankRight,gameObject.plank];
@@ -1028,6 +1040,7 @@ window.onload = function(){
             gameObject.ballHitPlank.play();
         }
         if(plank.body.touching.up){
+            gameObject.plank.anims.play("plankUp",true);
             let diff = ball.x - plank.x;
             if(diff == 0){
                 ball.body.setVelocity(20 * Math.random() - 10, -300);
